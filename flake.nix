@@ -96,6 +96,7 @@ EOF
             delta
             gh
             direnv
+            tmux
             tree
             curl
             wget
