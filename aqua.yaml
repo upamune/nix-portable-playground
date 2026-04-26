@@ -1,0 +1,12 @@
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+checksum:
+  enabled: true
+  require_checksum: true
+  supported_envs:
+    - all
+registries:
+  - type: standard
+    ref: v4.444.0
+packages:
+  - name: suzuki-shunsuke/pinact@v3.4.2

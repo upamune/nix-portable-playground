@@ -1,0 +1,60 @@
+name: build portable devshell
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - system: x86_64-linux
+            runner: ubuntu-latest
+          - system: aarch64-linux
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - uses: cachix/install-nix-action@616559265b40713947b9c190a8ff4b507b5df49b # v31.10.4
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Bundle devShell with nix-portable
+        env:
+          SYSTEM: ${{ matrix.system }}
+        run: |
+          nix bundle \
+            --bundler github:DavHau/nix-portable#zstd-max \
+            -o devshell \
+            ".#devShells.${SYSTEM}.default"
+          cp -L devshell/bin/devshell "devshell-${SYSTEM}"
+          chmod +w "devshell-${SYSTEM}"
+
+      - name: Smoke test (run bundle)
+        env:
+          SYSTEM: ${{ matrix.system }}
+        run: |
+          "./devshell-${SYSTEM}" -c hello
+          "./devshell-${SYSTEM}" -c zsh --version
+          "./devshell-${SYSTEM}" -c mise --version
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: devshell-${{ matrix.system }}
+          path: devshell-${{ matrix.system }}
+
+      - name: Upload to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          files: devshell-${{ matrix.system }}
