@@ -41,6 +41,27 @@ direnv 派なら `direnv allow` で `.envrc` の `use flake` が効く。
 
 > 補足: bundle は単一バイナリだが、初回起動時に `$HOME/.nix-portable` に展開キャッシュを作る。
 
+## インストール
+
+最新 release から現在の CPU に合うバイナリを `~/.local/bin/nix-portable-playground` に入れる:
+
+```sh
+./install.sh
+~/.local/bin/nix-portable-playground -c hello
+```
+
+`curl | bash` でも実行できる:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/upamune/nix-portable-playground/main/install.sh | bash
+```
+
+必要なら導入先や名前は上書きできる:
+
+```sh
+INSTALL_DIR=/usr/local/bin BIN_NAME=playground-devshell ./install.sh
+```
+
 ### 3. nix-darwin の linux-builder (参考)
 
 nix-darwin を使っているなら `nix.linux-builder.enable = true;` で aarch64-darwin から aarch64-linux 向けに直接 `nix bundle` できる。本リポジトリはこの構成は提供していない。
