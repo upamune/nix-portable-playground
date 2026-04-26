@@ -1,99 +1,122 @@
 # nix-portable-playground
 
-[numtide/devshell](https://github.com/numtide/devshell) で定義した開発環境を [DavHau/nix-portable](https://github.com/DavHau/nix-portable) でシングルバイナリに bundle して、Linux マシン (VPS など) に配るための雛形。
+Linux マシンに配ってすぐ使える、ポータブルな開発環境です。  
+このリポジトリでは `numtide/devshell` で定義した環境を `nix-portable` で単一バイナリにまとめています。
+
+受け取った人は Nix を事前に入れなくても、配布されたバイナリ 1 本で同じツール群を起動できます。
 
 参考記事: [nix-portableで開発環境をシングルバイナリにする](https://comamoca.dev/blog/2026-04-08-setting-up-portable-dev-env-with-nix-portable/)
 
-## 重要な前提
+## これは何か
 
-- nix-portable は **Linux 専用** (`x86_64-linux` / `aarch64-linux`)。macOS では bundle したバイナリは動かない。
-- ローカル開発 (`nix develop`) は darwin でも OK。bundle 生成は Linux 環境が必要。
+このバイナリを使うと、Linux 上で次のような開発ツール入りシェルを起動できます。
 
-## ローカルで開発環境を試す (任意プラットフォーム)
+- `zsh`
+- `mise`
+- `ripgrep`
+- `jq`
+- `fd`
+- `bat`
 
-```sh
-nix develop
-hello
-go version
-```
-
-direnv 派なら `direnv allow` で `.envrc` の `use flake` が効く。
-
-## Linux バイナリを作る
-
-### 1. GitHub Actions (推奨)
-
-`.github/workflows/build.yml` が `x86_64-linux` (`ubuntu-latest`) と `aarch64-linux` (`ubuntu-24.04-arm` 無料 ARM runner) で並行 bundle して artifact / release に上げる。
-
-- main へ push / PR で artifact 生成
-- リリースは [tagpr](https://github.com/Songmu/tagpr) 経由 (下記参照)
-
-### 2. ローカル (Docker 経由)
-
-`scripts/bundle-local.sh` で nixos/nix コンテナ内から bundle。Apple Silicon なら `aarch64-linux` はネイティブで高速、`x86_64-linux` は QEMU 経由で遅い。
+サンプルとして `hello` コマンドも入っています。
 
 ```sh
-./scripts/bundle-local.sh aarch64-linux   # 速い
-./scripts/bundle-local.sh x86_64-linux    # 遅い (QEMU)
+./devshell-x86_64-linux hello
 ```
 
-成果物: `./devshell-<system>`。Linux マシンに転送して `./devshell-<system> hello` 等で実行。
+## 使う人向け
 
-> 補足: bundle は単一バイナリだが、初回起動時に `$HOME/.nix-portable` に展開キャッシュを作る。
+### 1. インストールする
 
-## インストール
-
-最新 release から現在の CPU に合うバイナリを `~/.local/bin/nix-portable-playground` に入れる:
+最新 release から現在の CPU に合うバイナリを取得して `~/.local/bin` に入れます。
 
 ```sh
 ./install.sh
 ~/.local/bin/nix-portable-playground hello
 ```
 
-`curl | bash` でも実行できる:
+`curl | bash` でも導入できます。
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/upamune/nix-portable-playground/main/install.sh | bash
 ```
 
-必要なら導入先や名前は上書きできる:
+導入先やコマンド名を変えたい場合:
 
 ```sh
 INSTALL_DIR=/usr/local/bin BIN_NAME=playground-devshell ./install.sh
 ```
 
-### 3. nix-darwin の linux-builder (参考)
+### 2. 実行する
 
-nix-darwin を使っているなら `nix.linux-builder.enable = true;` で aarch64-darwin から aarch64-linux 向けに直接 `nix bundle` できる。本リポジトリはこの構成は提供していない。
+インストール後は、通常のコマンドのように呼べます。
 
-## リリース運用 (tagpr)
-
-[Songmu/tagpr](https://github.com/Songmu/tagpr) で半自動リリース。
-
-1. main に push されると `.github/workflows/tagpr.yml` が走り、次バージョンの release PR を作成 / 更新する
-2. その PR を merge すると tagpr が `vX.Y.Z` タグを push し、release notes 付きの GitHub Release を作成
-3. タグ push をトリガーに `.github/workflows/build.yml` が走り、`devshell-x86_64-linux` と `devshell-aarch64-linux` を Release に添付
-
-設定ファイルは `.tagpr` (releaseBranch: main, vPrefix, release: true)。
-
-初回リリース時は手動で `v0.0.0` を push しておくか、tagpr が作る最初の release PR を merge するだけで OK。
-
-## ツールバージョン管理
-
-- [aqua](https://aquaproj.github.io/) で `pinact` を管理 (`aqua.yaml`)
-- `aqua i` でインストール → `aqua exec -- pinact run` で `.github/workflows/*.yml` の actions を SHA に pin
-- CI (`.github/workflows/lint.yml`) で `pinact run --check` を実行し、未 pin の actions があれば失敗
-
-## ファイル構成
-
+```sh
+nix-portable-playground hello
+nix-portable-playground zsh --version
+nix-portable-playground mise --version
 ```
-flake.nix                       # numtide/devshell で devShell を定義
-.envrc                          # direnv 用
-aqua.yaml                       # pinact の version 固定
-.pinact.yaml                    # pinact の設定
-.github/workflows/build.yml     # Linux バイナリ bundle (x86_64 / aarch64) と Release 添付
-.github/workflows/tagpr.yml     # tagpr による release PR 自動作成 / タグ打ち
-.github/workflows/lint.yml      # pinact pin チェック
-.tagpr                          # tagpr 設定
-scripts/bundle-local.sh         # ローカル Docker 経由 bundle
+
+初回起動時には `$HOME/.nix-portable` に展開キャッシュを作成します。
+
+### 3. 対応環境を確認する
+
+- Linux 専用です
+- 対応 CPU は `x86_64` と `aarch64` です
+- macOS では bundle 済みバイナリは動きません
+
+## 作る人向け
+
+### ローカルで dev shell を試す
+
+配布前に、まず flake の dev shell をそのまま確認できます。
+
+```sh
+nix develop
+hello
+```
+
+`direnv` を使う場合は `direnv allow` を実行してください。
+
+### ローカルで Linux バイナリを作る
+
+Docker 経由で bundle できます。
+
+```sh
+./scripts/bundle-local.sh aarch64-linux
+./scripts/bundle-local.sh x86_64-linux
+```
+
+生成物は `./devshell-<system>` です。
+
+```sh
+./devshell-aarch64-linux hello
+./devshell-aarch64-linux zsh --version
+```
+
+補足:
+
+- Apple Silicon では `aarch64-linux` が高速です
+- `x86_64-linux` は QEMU 経由なので遅くなります
+
+## CI とリリース
+
+GitHub Actions では次を自動実行します。
+
+- `main` への push / pull request で bundle を build
+- `hello` / `zsh --version` / `mise --version` を smoke test
+- `v*` タグでは release にバイナリを添付
+
+リリースは `tagpr` ベースです。`main` への push で release PR を更新し、その PR を merge するとタグと GitHub Release が作られます。
+
+## 関連ファイル
+
+```text
+flake.nix                   dev shell 定義
+install.sh                  利用者向けインストーラ
+scripts/bundle-local.sh     ローカル bundle
+.github/workflows/build.yml bundle と smoke test
+.github/workflows/tagpr.yml release PR とタグ運用
+.github/workflows/lint.yml  pinact チェック
+aqua.yaml                   開発用 CLI ツールの固定
 ```
