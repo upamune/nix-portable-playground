@@ -37,12 +37,12 @@ docker run --rm \
   sh -c '
     set -eu
     echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-    rm -rf devshell devshell-${SYSTEM}
+    rm -f devshell devshell-${SYSTEM}
     nix bundle \
       --bundler github:DavHau/nix-portable#zstd-max \
       -o devshell \
       ".#devShells.${SYSTEM}.default"
-    cp -L devshell/bin/devshell "devshell-${SYSTEM}"
+    mv devshell "devshell-${SYSTEM}"
     chmod +w "devshell-${SYSTEM}"
   '
 

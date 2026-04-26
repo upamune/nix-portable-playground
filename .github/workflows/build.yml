@@ -33,11 +33,12 @@ jobs:
         env:
           SYSTEM: ${{ matrix.system }}
         run: |
+          rm -f devshell "devshell-${SYSTEM}"
           nix bundle \
             --bundler github:DavHau/nix-portable#zstd-max \
             -o devshell \
             ".#devShells.${SYSTEM}.default"
-          cp -L devshell/bin/devshell "devshell-${SYSTEM}"
+          mv devshell "devshell-${SYSTEM}"
           chmod +w "devshell-${SYSTEM}"
 
       - name: Smoke test (run bundle)
