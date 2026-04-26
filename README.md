@@ -37,7 +37,7 @@ direnv 派なら `direnv allow` で `.envrc` の `use flake` が効く。
 ./scripts/bundle-local.sh x86_64-linux    # 遅い (QEMU)
 ```
 
-成果物: `./devshell-<system>`。Linux マシンに転送して `./devshell-<system> -c hello` 等で実行。
+成果物: `./devshell-<system>`。Linux マシンに転送して `./devshell-<system> hello` 等で実行。
 
 > 補足: bundle は単一バイナリだが、初回起動時に `$HOME/.nix-portable` に展開キャッシュを作る。
 
@@ -47,7 +47,7 @@ direnv 派なら `direnv allow` で `.envrc` の `use flake` が効く。
 
 ```sh
 ./install.sh
-~/.local/bin/nix-portable-playground -c hello
+~/.local/bin/nix-portable-playground hello
 ```
 
 `curl | bash` でも実行できる:

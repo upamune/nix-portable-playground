@@ -44,7 +44,7 @@ docker run --rm \
       -o devshell \
       ".#devShells.${SYSTEM}.default"
     BUNDLE_BIN=""
-    for candidate in devshell/bin/devshell devshell/bin/menu; do
+    for candidate in devshell/bin/playground devshell/bin/devshell devshell/bin/menu; do
       if [ -x "$candidate" ]; then
         BUNDLE_BIN="$candidate"
         break
@@ -63,6 +63,6 @@ ls -lh "${REPO_ROOT}/${OUT}"
 cat <<EOF
 
 bundle を試すには (Linux マシン or 同じコンテナ内で):
-  ./${OUT} -c hello
-  ./${OUT} -c go version
+  ./${OUT} hello
+  ./${OUT} zsh --version
 EOF
