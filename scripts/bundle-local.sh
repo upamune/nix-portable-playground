@@ -37,12 +37,24 @@ docker run --rm \
   sh -c '
     set -eu
     echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
-    rm -f devshell devshell-${SYSTEM}
+    rm -rf devshell
+    rm -f devshell-${SYSTEM}
     nix bundle \
       --bundler github:DavHau/nix-portable#zstd-max \
       -o devshell \
       ".#devShells.${SYSTEM}.default"
-    mv devshell "devshell-${SYSTEM}"
+    BUNDLE_BIN=""
+    for candidate in devshell/bin/devshell devshell/bin/menu; do
+      if [ -x "$candidate" ]; then
+        BUNDLE_BIN="$candidate"
+        break
+      fi
+    done
+    if [ -z "$BUNDLE_BIN" ] && [ -d devshell/bin ]; then
+      BUNDLE_BIN="$(find devshell/bin -maxdepth 1 -type f -perm -u+x | head -n 1)"
+    fi
+    test -n "$BUNDLE_BIN"
+    cp -L "$BUNDLE_BIN" "devshell-${SYSTEM}"
   '
 
 echo "==> done: ${REPO_ROOT}/${OUT}"
