@@ -39,7 +39,6 @@ jobs:
             -o devshell \
             ".#devShells.${SYSTEM}.default"
           mv devshell "devshell-${SYSTEM}"
-          chmod +w "devshell-${SYSTEM}"
 
       - name: Smoke test (run bundle)
         env:

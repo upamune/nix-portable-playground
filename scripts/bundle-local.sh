@@ -43,7 +43,6 @@ docker run --rm \
       -o devshell \
       ".#devShells.${SYSTEM}.default"
     mv devshell "devshell-${SYSTEM}"
-    chmod +w "devshell-${SYSTEM}"
   '
 
 echo "==> done: ${REPO_ROOT}/${OUT}"
